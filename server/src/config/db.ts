@@ -8,10 +8,10 @@ export async function connectDB(): Promise<void> {
     return;
   }
 
-  const uri = process.env.MONGO_URI;
+  const uri = process.env.MONGODB_URI;
 
   if (!uri) {
-    console.error("MONGO_URI is not defined in .env");
+    console.error("MONGODB_URI is not defined in .env");
     process.exit(1);
   }
 
