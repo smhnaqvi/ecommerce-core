@@ -1,9 +1,4 @@
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true, // send/receive the http-only auth cookie
-});
+import { http as api } from "./http";
 
 export interface User { _id: string; name: string; email: string; isAdmin: boolean; }
 
