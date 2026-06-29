@@ -8,6 +8,7 @@ import healthRouter from "./routes/health.routes";
 import authRouter from "./routes/auth.routes";
 import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
+import orderRouter from "./routes/order.routes";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/products", productRouter);
+app.use("/api/orders", orderRouter);
 
 app.use(notFound);
 app.use(errorHandler);
