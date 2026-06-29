@@ -2,6 +2,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getProductBySlug, getProducts } from "@/lib/api";
+import AddToCartButton from "@/components/AddToCartButton";
 
 // Pre-render the most recent products at build time.
 export async function generateStaticParams() {
@@ -44,7 +45,7 @@ export default async function ProductPage(
         <p className="text-sm text-gray-500">
           {product.countInStock > 0 ? "In stock" : "Out of stock"}
         </p>
-        {/* "Add to cart" (client component) arrives in Phase 5 */}
+        <AddToCartButton product={product} />
       </div>
     </div>
   );
