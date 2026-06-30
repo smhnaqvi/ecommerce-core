@@ -19,7 +19,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     catch { set({ user: null }); }
     finally { set({ loading: false }); }
   },
-  login: async (email, password) => set({ user: await authApi.login(email, password) }),
+  login: async (email, password) => {
+    const user = await authApi.login(email, password);
+    if (!user.isAdmin) throw new Error("Admin access only");
+    set({ user });
+  },
   register: async (name, email, password) =>
     set({ user: await authApi.register(name, email, password) }),
   logout: async () => { await authApi.logout(); set({ user: null }); },
