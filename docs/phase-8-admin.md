@@ -1,4 +1,4 @@
-<!-- @format -->
+
 
 # Phase 8 — Admin Dashboard (Vite + React + TanStack Query)
 
@@ -18,6 +18,8 @@ existing **cookie auth**, gated to `isAdmin`.
 **Mentoring style:** Explain → you write. One step at a time.
 
 ---
+
+
 
 ## Part A — Server (`feature/server`)
 
@@ -52,6 +54,8 @@ Add to `server/.env` (and `.env.example`): `ADMIN_URL=http://localhost:5173`
 > works (same as the storefront). Both apps on `localhost` even share the cookie jar — fine for
 > dev; production uses separate subdomains.
 
+
+
 ### Step A2 — Admin order endpoints (`src/controllers/order.controller.ts`)
 
 Add two admin-only handlers:
@@ -83,6 +87,8 @@ export async function updateOrderStatus(req: Request, res: Response) {
 }
 ```
 
+
+
 ### Step A3 — Wire the routes (`src/routes/order.routes.ts`)
 
 ```ts
@@ -112,6 +118,8 @@ export default router;
 > Order matters: literal paths (`/mine`, `/`) and `/:id/status` go **before** `/:id`, or the
 > param route swallows them.
 
+
+
 ### Server verification (admin cookie)
 
 ```bash
@@ -123,7 +131,11 @@ curl -b cookies.txt http://localhost:8800/api/orders            # as NON-admin -
 
 ---
 
+
+
 ## Part B — Admin app (`feature/admin`)
+
+
 
 ### Step B1 — Scaffold
 
@@ -173,6 +185,8 @@ export const api = axios.create({
 });
 ```
 
+
+
 ### Step B3 — Types + API modules
 
 `src/api/types.ts` — reuse the shapes from the storefront (`Category`, `Product`,
@@ -214,6 +228,8 @@ export const getMe = () => api.get("/auth/me").then(r => r.data);
 export const logout = () => api.post("/auth/logout").then(() => {});
 ```
 
+
+
 ### Step B4 — Auth store + admin guard
 
 `src/store/authStore.ts` — mirror the storefront's Zustand store (`user`, `loading`, `fetchUser`,
@@ -245,6 +261,8 @@ export default function RequireAdmin() {
 
 > Note: this is **client-side** gating for UX. The real security is the server's `protect` +
 > `isAdmin` on every write — never trust the client.
+
+
 
 ### Step B5 — Providers (`src/main.tsx`)
 
@@ -337,6 +355,8 @@ export default function Products() {
 > tells React Query the list is stale; it refetches automatically. This is exactly the pattern you
 > dropped on the storefront (RSC handled it there) but want here.
 
+
+
 ### Step B8 — Product form with image upload
 
 Create/edit in one component (`/products/new` vs `/products/:id/edit`). Build a `FormData` so the
@@ -361,6 +381,8 @@ for (const file of files) form.append("images", file); // <input type="file" mul
 > Don't set a `Content-Type` header manually — when you pass a `FormData`, the browser sets
 > `multipart/form-data` **with the boundary**. Setting it yourself breaks the upload.
 
+
+
 ### Step B9 — Categories page
 
 A simple CRUD: `useQuery(["categories"])` for the list, a small form to create, and delete
@@ -383,6 +405,8 @@ const setStatus = useMutation({
 
 ---
 
+
+
 ## Verification (end of Phase 8)
 
 Run all three: server (`:8800`), storefront (`:3001`), admin (`:5173`). Log into the admin with a
@@ -390,22 +414,25 @@ user that has `isAdmin: true`.
 
 1. Non-admin login on the admin app is rejected ("Admin access only").
 2. Products: create a product with images → appears in the list **and** on the storefront; edit
-   price → storefront reflects it after ISR revalidate; delete → gone from both.
+  price → storefront reflects it after ISR revalidate; delete → gone from both.
 3. New product's images land in Cloudinary (`buraq/products`) and show on the storefront.
 4. Categories: create/delete → storefront category chips update.
 5. Orders: place an order on the storefront → it appears in admin Orders; change status to
-   "shipped" → the buyer sees it under storefront `/orders`; "delivered" flips `isPaid`.
+  "shipped" → the buyer sees it under storefront `/orders`; "delivered" flips `isPaid`.
 6. No CORS errors from either `:3001` or `:5173`.
 
 ---
 
+
+
 ## Commit plan (your user, no Claude co-author)
 
-**On `feature/server`:**
+**On** `feature/server`**:**
+
 1. `feat(server): allow multiple CORS origins (client + admin)`
 2. `feat(server): add admin order listing and status update`
 
-**On `feature/admin`:**
+**On** `feature/admin`**:**
 3. `chore(admin): scaffold Vite React+TS app with Tailwind v4`
 4. `feat(admin): add api layer, auth store and admin route guard`
 5. `feat(admin): add product list and form with image upload`
@@ -415,9 +442,13 @@ user that has `isAdmin: true`.
 
 ---
 
+
+
 ## Out of scope (later)
+
 - Stripe payments (next phase) and deployment
 - Dashboard analytics (sales totals, low-stock), pagination/search in admin tables
 - Deleting Cloudinary images when a product/image is removed (the Phase 3 TODO)
 - Role management UI (promoting users to admin) — for now flip `isAdmin` in Mongo
 - A dedicated `GET /products/id/:id` admin endpoint (we reuse list/slug for now)
+
