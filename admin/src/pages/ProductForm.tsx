@@ -1,7 +1,9 @@
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
+
+type ApiError = { response?: { data?: { message?: string } } };
 
 export default function ProductForm() {
   const { id } = useParams();
@@ -17,9 +19,9 @@ export default function ProductForm() {
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState("");
 
-  const { data: categories } = useQuery({
+  const { data: categories } = useQuery<{ _id: string; name: string }[]>({
     queryKey: ["categories"],
-    queryFn: api.categories.listAllCategories,
+    queryFn: () => api.categories.list(),
   });
 
   const { data: existing } = useQuery({
@@ -47,7 +49,7 @@ export default function ProductForm() {
       qc.invalidateQueries({ queryKey: ["products"] });
       navigate("/");
     },
-    onError: (err: any) => {
+    onError: (err: ApiError) => {
       setError(err?.response?.data?.message ?? "Failed to save product");
     },
   });
@@ -122,7 +124,7 @@ export default function ProductForm() {
             required
           >
             <option value="">Select a category</option>
-            {categories?.map((c: any) => (
+            {categories?.map((c) => (
               <option key={c._id} value={c._id}>
                 {c.name}
               </option>

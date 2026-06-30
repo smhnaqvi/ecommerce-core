@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 
@@ -17,8 +17,9 @@ export default function Login() {
     try {
       await login(email, password);
       navigate("/");
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? err.message ?? "Login failed");
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(e?.response?.data?.message ?? e?.message ?? "Login failed");
     } finally {
       setLoading(false);
     }

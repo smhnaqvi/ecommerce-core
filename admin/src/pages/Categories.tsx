@@ -1,13 +1,16 @@
-import { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
+
+interface Category { _id: string; name: string; }
+type ApiError = { response?: { data?: { message?: string } } };
 
 export default function Categories() {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: api.categories.list,
   });
@@ -18,7 +21,7 @@ export default function Categories() {
       qc.invalidateQueries({ queryKey: ["categories"] });
       setName("");
     },
-    onError: (err: any) => {
+    onError: (err: ApiError) => {
       setError(err?.response?.data?.message ?? "Failed to create category");
     },
   });
@@ -60,7 +63,7 @@ export default function Categories() {
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
       <ul className="divide-y divide-gray-200 border border-gray-200 rounded">
-        {data?.map((c: any) => (
+        {data?.map((c) => (
           <li key={c._id} className="flex justify-between items-center px-3 py-2">
             <span>{c.name}</span>
             <button
