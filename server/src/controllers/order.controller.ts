@@ -72,3 +72,28 @@ export async function getOrderById(req: Request, res: Response) {
   }
   res.json(order);
 }
+
+// GET /api/orders  (admin) — every order, newest first, with buyer info
+export async function listAllOrders(_req: Request, res: Response) {
+  const orders = await Order.find()
+    .populate("user", "name email")
+    .sort({ createdAt: -1 });
+  res.json(orders);
+}
+
+// PATCH /api/orders/:id/status  (admin)
+export async function updateOrderStatus(req: Request, res: Response) {
+  const { status } = req.body as { status: IOrder["status"] };
+  const order = await Order.findById(req.params.id);
+  if (!order) {
+    res.status(404);
+    throw new Error("Order not found");
+  }
+  order.status = status;
+  if (status === "delivered" && !order.isPaid) {
+    order.isPaid = true; // COD considered paid on delivery
+    order.paidAt = new Date();
+  }
+  await order.save();
+  res.json(order);
+}
