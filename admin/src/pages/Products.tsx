@@ -2,9 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import api from "../api";
 
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  countInStock: number;
+}
+
 export default function Products() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<{ items: Product[] }>({
     queryKey: ["products"],
     queryFn: api.products.listProducts,
   });
@@ -25,7 +32,7 @@ export default function Products() {
       <table className="w-full text-sm">
         <thead><tr className="border-b text-left"><th className="p-2">Name</th><th>Price</th><th>Stock</th><th></th></tr></thead>
         <tbody>
-          {data.items.map((p) => (
+          {data?.items?.map((p) => (
             <tr key={p._id} className="border-b">
               <td className="p-2">{p.name}</td>
               <td>${p.price}</td>
