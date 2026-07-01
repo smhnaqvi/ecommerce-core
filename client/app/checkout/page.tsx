@@ -99,7 +99,7 @@ export default function CheckoutPage() {
         <h2 className="text-2xl font-bold">Order summary</h2>
         <ul className="divide-y rounded border">
           {items.map((i) => (
-            <li key={i.product} className="flex items-center gap-3 p-3">
+            <li key={i.product._id} className="flex items-center gap-3 p-3">
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded bg-gray-100">
                 {i.image && (
                   <Image src={i.image} alt={i.name} fill className="object-cover" sizes="56px" />
