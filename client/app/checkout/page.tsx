@@ -3,6 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { ShieldCheck, Truck, ArrowRight, MapPin } from "lucide-react";
 import { useCartStore, cartTotal } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { createOrder, type ShippingAddress } from "@/lib/orderApi";
@@ -27,12 +28,10 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Guard: empty cart -> back to cart.
   useEffect(() => {
     if (items.length === 0) router.replace("/cart");
   }, [items.length, router]);
 
-  // Guard: must be logged in to place an order.
   useEffect(() => {
     if (!authLoading && !user) router.replace("/login?redirect=/checkout");
   }, [authLoading, user, router]);
@@ -55,69 +54,236 @@ export default function CheckoutPage() {
     }
   }
 
-  // Avoid a flash of the form before the empty-cart guard redirects.
   if (items.length === 0) return null;
 
-  const fields: { key: keyof ShippingAddress; label: string; type?: string }[] = [
-    { key: "fullName", label: "Full name" },
-    { key: "phone", label: "Phone", type: "tel" },
-    { key: "address", label: "Address" },
-    { key: "city", label: "City" },
-    { key: "postalCode", label: "Postal code" },
-    { key: "country", label: "Country" },
+  const subtotal = cartTotal(items);
+
+  const fields: {
+    key: keyof ShippingAddress;
+    label: string;
+    type?: string;
+    placeholder?: string;
+    half?: boolean;
+  }[] = [
+    { key: "fullName", label: "Full Name", placeholder: "Muhammad Ali" },
+    { key: "phone", label: "Phone", type: "tel", placeholder: "+92 300 0000000" },
+    { key: "address", label: "Street Address", placeholder: "House #, Street, Area" },
+    { key: "city", label: "City", placeholder: "Lahore", half: true },
+    { key: "postalCode", label: "Postal Code", placeholder: "54000", half: true },
+    { key: "country", label: "Country", placeholder: "Pakistan" },
   ];
 
   return (
-    <div className="grid gap-8 md:grid-cols-2">
-      {/* Address form */}
-      <form onSubmit={onSubmit} className="space-y-4">
-        <h1 className="text-2xl font-bold">Shipping address</h1>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {fields.map((f) => (
-          <div key={f.key}>
-            <label className="mb-1 block text-sm font-medium">{f.label}</label>
-            <input
-              type={f.type ?? "text"}
-              required
-              value={address[f.key]}
-              onChange={(e) => update(f.key, e.target.value)}
-              className="w-full rounded border px-3 py-2"
-            />
-          </div>
-        ))}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded bg-black py-2 text-white disabled:opacity-40"
-        >
-          {submitting ? "Placing order…" : "Place order (Cash on delivery)"}
-        </button>
-      </form>
+    <div className="min-h-screen bg-[#F5EFE4]">
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-12 py-10">
 
-      {/* Order summary */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Order summary</h2>
-        <ul className="divide-y rounded border">
-          {items.map((i) => (
-            <li key={i.product} className="flex items-center gap-3 p-3">
-              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded bg-gray-100">
-                {i.image && (
-                  <Image src={i.image} alt={i.name} fill className="object-cover" sizes="56px" />
-                )}
+        {/* Page header */}
+        <div className="mb-10">
+          <span className="font-sans text-[10px] tracking-[0.3em] uppercase text-[#8B5E3C] block mb-2">
+            Almost there
+          </span>
+          <h1 className="font-serif text-4xl text-[#2C1A0E]">Checkout</h1>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 xl:gap-16">
+
+          {/* ── Left: Shipping form (3 cols) ─────────────────────────── */}
+          <div className="lg:col-span-3">
+
+            {/* Section label */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-7 h-7 rounded-full bg-[#2C1A0E] flex items-center justify-center shrink-0">
+                <MapPin size={13} className="text-[#F5EFE4]" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{i.name}</p>
-                <p className="text-sm text-gray-500">
-                  {i.qty} × ${i.price}
+              <h2 className="font-sans text-sm font-medium tracking-widest uppercase text-[#2C1A0E]">
+                Shipping Address
+              </h2>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="mb-6 bg-red-50 border border-red-200 px-4 py-3">
+                <p className="font-sans text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={onSubmit} className="space-y-5">
+              {/* Render fields — city + postal in a 2-col grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {fields.map((f) => (
+                  <div
+                    key={f.key}
+                    className={
+                      !f.half ? "sm:col-span-2" : "sm:col-span-1"
+                    }
+                  >
+                    <label className="block font-sans text-xs tracking-wide uppercase text-[#2C1A0E]/50 mb-2">
+                      {f.label}
+                    </label>
+                    <input
+                      type={f.type ?? "text"}
+                      required
+                      placeholder={f.placeholder}
+                      value={address[f.key]}
+                      onChange={(e) => update(f.key, e.target.value)}
+                      className="w-full bg-transparent border border-[#2C1A0E]/20 px-4 py-3 font-sans text-sm text-[#2C1A0E] placeholder:text-[#2C1A0E]/25 focus:outline-none focus:border-[#8B5E3C] transition-colors"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div className="w-full h-px bg-[#2C1A0E]/10 my-2" />
+
+              {/* Payment method — COD only for now */}
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-7 h-7 rounded-full bg-[#2C1A0E] flex items-center justify-center shrink-0">
+                    <Truck size={13} className="text-[#F5EFE4]" />
+                  </div>
+                  <h2 className="font-sans text-sm font-medium tracking-widest uppercase text-[#2C1A0E]">
+                    Payment Method
+                  </h2>
+                </div>
+
+                {/* COD option */}
+                <div className="border border-[#8B5E3C] bg-[#8B5E3C]/5 px-4 py-4 flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full border-2 border-[#8B5E3C] flex items-center justify-center shrink-0">
+                    <div className="w-2 h-2 rounded-full bg-[#8B5E3C]" />
+                  </div>
+                  <div>
+                    <p className="font-sans text-sm font-medium text-[#2C1A0E]">
+                      Cash on Delivery
+                    </p>
+                    <p className="font-sans text-xs text-[#2C1A0E]/50 mt-0.5">
+                      Pay when your order arrives at your door
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-[#2C1A0E] text-[#F5EFE4] font-sans text-xs tracking-widest uppercase py-4 flex items-center justify-center gap-2 hover:bg-[#8B5E3C] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              >
+                {submitting ? (
+                  <>
+                    <span className="w-3 h-3 border border-[#F5EFE4]/40 border-t-[#F5EFE4] rounded-full animate-spin" />
+                    Placing order…
+                  </>
+                ) : (
+                  <>
+                    Place Order
+                    <ArrowRight size={14} />
+                  </>
+                )}
+              </button>
+
+              {/* Security note */}
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <ShieldCheck size={13} className="text-[#2C1A0E]/30" />
+                <p className="font-sans text-[10px] text-[#2C1A0E]/30 tracking-wide">
+                  Your information is encrypted and secure
                 </p>
               </div>
-              <p className="text-sm font-medium">${(i.price * i.qty).toFixed(2)}</p>
-            </li>
-          ))}
-        </ul>
-        <div className="flex items-center justify-between border-t pt-3 text-lg font-bold">
-          <span>Total</span>
-          <span>${cartTotal(items).toFixed(2)}</span>
+            </form>
+          </div>
+
+          {/* ── Right: Order summary (2 cols) ────────────────────────── */}
+          <div className="lg:col-span-2">
+            <div className="bg-[#E8DDD0] p-6 sticky top-24">
+              <h2 className="font-serif text-xl text-[#2C1A0E] mb-6">
+                Order Summary
+              </h2>
+
+              {/* Line items */}
+              <ul className="space-y-4 mb-6">
+                {items.map((item) => (
+                  <li key={item.product._id} className="flex items-center gap-3">
+                    {/* Image with qty badge */}
+                    <div className="relative shrink-0">
+                      <div className="relative w-16 h-18 overflow-hidden bg-[#F5EFE4]">
+                        {item.image ? (
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            width={64}
+                            height={72}
+                            className="object-cover w-full h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-[#E8DDD0]" />
+                        )}
+                      </div>
+                      {/* Qty badge */}
+                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#2C1A0E] text-[#F5EFE4] font-sans text-[10px] flex items-center justify-center">
+                        {item.qty}
+                      </span>
+                    </div>
+
+                    {/* Name + price */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-sans text-xs text-[#2C1A0E] leading-snug line-clamp-2">
+                        {item.name}
+                      </p>
+                      <p className="font-sans text-xs text-[#2C1A0E]/40 mt-1">
+                        Rs. {item.price.toLocaleString()} × {item.qty}
+                      </p>
+                    </div>
+
+                    {/* Line total */}
+                    <p className="font-sans text-sm font-medium text-[#2C1A0E] shrink-0">
+                      Rs. {(item.price * item.qty).toLocaleString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Divider */}
+              <div className="w-full h-px bg-[#2C1A0E]/10 mb-4" />
+
+              {/* Subtotal + shipping */}
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between">
+                  <span className="font-sans text-xs text-[#2C1A0E]/50">Subtotal</span>
+                  <span className="font-sans text-xs text-[#2C1A0E]">
+                    Rs. {subtotal.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-sans text-xs text-[#2C1A0E]/50">Shipping</span>
+                  <span className="font-sans text-xs text-[#2C1A0E]">
+                    {subtotal >= 5000 ? (
+                      <span className="text-emerald-600">Free</span>
+                    ) : (
+                      "Calculated at checkout"
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-sans text-xs text-[#2C1A0E]/50">Payment</span>
+                  <span className="font-sans text-xs text-[#2C1A0E]">
+                    Cash on Delivery
+                  </span>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="w-full h-px bg-[#2C1A0E]/10 mb-4" />
+
+              {/* Total */}
+              <div className="flex justify-between items-baseline">
+                <span className="font-sans text-sm font-medium text-[#2C1A0E]">
+                  Total
+                </span>
+                <span className="font-serif text-2xl text-[#2C1A0E]">
+                  Rs. {subtotal.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

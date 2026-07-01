@@ -3,6 +3,26 @@ import Link from "next/link";
 import { useState } from "react";
 import { ShoppingBag, Menu, X, Search } from "lucide-react";
 
+
+const NavLinks = [
+  {
+    label: "Men",
+    href: "#",
+  },
+  {
+    label: "Women",
+    href: "#",
+  },
+  {
+    label: "Collections",
+    href: "/collections",
+  },
+  {
+    label: "Sale",
+    href: "#",
+  },
+];
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
@@ -16,13 +36,13 @@ export default function Navbar() {
 
         {/* Nav links */}
         <nav className="hidden md:flex items-center gap-8">
-          {["Men", "Women", "Collections", "Sale"].map((item) => (
+          {NavLinks.map((item) => (
             <Link
-              key={item}
-              href={`/${item.toLowerCase()}`}
+              key={item.label}
+              href={item.href}
               className="font-sans text-sm tracking-widest uppercase text-espresso/70 hover:text-brown transition-colors duration-200"
             >
-              {item}
+              {item.label}
             </Link>
           ))}
         </nav>
@@ -50,14 +70,14 @@ export default function Navbar() {
       {/* Mobile menu */}
       {open && (
         <div className="md:hidden bg-[#F5EFE4] border-t border-sand px-6 py-4 flex flex-col gap-4">
-          {["Men", "Women", "Collections", "Sale"].map((item) => (
+          {NavLinks.map((item) => (
             <Link
-              key={item}
-              href={`/${item.toLowerCase()}`}
+              key={item.label}
+              href={item.href}
               className="font-sans text-sm tracking-widest uppercase text-espresso/70"
               onClick={() => setOpen(false)}
             >
-              {item}
+              {item.label}
             </Link>
           ))}
         </div>

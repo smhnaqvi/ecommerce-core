@@ -12,7 +12,7 @@ export default function AddToCartButton({ product }: { product: Product }) {
 
   function handleAdd() {
     addItem({
-      product: product._id, // CartItem.product is the product id
+      product: product,
       name: product.name,
       price: product.price,
       image: product.images[0],
@@ -25,7 +25,7 @@ export default function AddToCartButton({ product }: { product: Product }) {
     <button
       onClick={handleAdd}
       disabled={outOfStock}
-      className="rounded bg-black px-6 py-2 text-white transition disabled:opacity-40"
+      className="w-full bg-[#2C1A0E] text-[#F5EFE4] font-sans text-xs tracking-widest uppercase py-4 hover:bg-[#8B5E3C] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {outOfStock ? "Out of stock" : added ? "Added ✓" : "Add to cart"}
     </button>
