@@ -87,7 +87,7 @@ export default async function CollectionsPage({
               return (
                 <Link
                   key={product._id}
-                  href={`/products/${product.slug ?? product._id}`}
+                  href={`/product/${product.slug ?? product._id}`}
                   className="group"
                 >
                   {/* Image */}
