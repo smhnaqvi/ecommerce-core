@@ -12,7 +12,7 @@ export default function AddToCartButton({ product }: { product: Product }) {
 
   function handleAdd() {
     addItem({
-      product: product._id, // CartItem.product is the product id
+      product: product,
       name: product.name,
       price: product.price,
       image: product.images[0],
