@@ -20,6 +20,11 @@ export interface IOrder extends Document {
     country: string;
   };
   paymentMethod: "COD" | "STRIPE";
+  paymentResult?: {
+    id: string;
+    status: string;
+    updateTime: string;
+  };
   itemsPrice: number;
   shippingPrice: number;
   totalPrice: number;
@@ -49,6 +54,14 @@ const orderSchema = new Schema<IOrder>(
       country: { type: String, required: true },
     },
     paymentMethod: { type: String, enum: ["COD", "STRIPE"], default: "COD" },
+    paymentResult: {
+      type: {
+        id: String,
+        status: String,
+        updateTime: String,
+      },
+      required: false,
+    },
     itemsPrice: { type: Number, required: true },
     shippingPrice: { type: Number, default: 0 },
     totalPrice: { type: Number, required: true },

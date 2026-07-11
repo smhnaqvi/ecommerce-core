@@ -9,13 +9,23 @@ import authRouter from "./routes/auth.routes";
 import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
 import orderRouter from "./routes/order.routes";
+import paymentRouter from "./routes/payment.routes";
+
 import { connectDB } from "./config/db";
+import { stripeWebhook } from "./controllers/payment.controller";
+
 
 // Single promise — created once when module loads, reused on every request
 const dbConnection = connectDB();
 
 
 const app = express();
+
+app.post(
+  "/api/payments/webhook",
+  express.raw({ type: "application/json" }),
+  stripeWebhook
+);
 
 app.use(express.json());
 
@@ -49,6 +59,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
+app.use("/api/payments", paymentRouter);
+
 
 app.use(notFound);
 app.use(errorHandler);
