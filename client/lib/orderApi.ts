@@ -27,22 +27,29 @@ export interface Order {
   shippingPrice: number;
   totalPrice: number;
   isPaid: boolean;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  paidAt?: string;
+  status: "awaiting_payment" | "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   createdAt: string;
 }
 
 // Send only { product, qty } per item plus the address — the server computes prices.
-export async function createOrder(items: CartItem[], shippingAddress: ShippingAddress) {
-  const payload = {
-    items: items.map((i) => ({ product: i.product, qty: i.qty })),
-    shippingAddress,
-    paymentMethod: "COD" as const,
-  };
-  const { data } = await http.post<Order>("/orders", payload);
-  return data;
+export async function createOrder(
+  items: CartItem[],
+  shippingAddress: ShippingAddress,
+  paymentMethod: "COD" | "STRIPE" = "COD"
+) {
+  const res = await http.post(`/orders`, {
+    items, shippingAddress, paymentMethod
+  });
+  return res.data
 }
 
 export async function getMyOrders() {
   const { data } = await http.get<Order[]>("/orders/mine");
+  return data;
+}
+
+export async function getOrderById(id: string) {
+  const { data } = await http.get<Order>(`/orders/${id}`);
   return data;
 }

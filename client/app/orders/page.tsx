@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getMyOrders, type Order } from "@/lib/orderApi";
 
 const STATUS_STYLES: Record<Order["status"], string> = {
+  awaiting_payment: "bg-orange-100 text-orange-800",
   pending: "bg-yellow-100 text-yellow-800",
   processing: "bg-blue-100 text-blue-800",
   shipped: "bg-purple-100 text-purple-800",
@@ -46,10 +47,11 @@ export default function OrdersPage() {
         {orders.map((o) => {
           const itemCount = o.items.reduce((sum, i) => sum + i.qty, 0);
           return (
-            <li
-              key={o._id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded border p-4"
-            >
+            <li key={o._id}>
+              <Link
+                href={`/orders/${o._id}`}
+                className="flex flex-wrap items-center justify-between gap-3 rounded border p-4 hover:bg-gray-50"
+              >
               <div>
                 <p className="font-medium">
                   {new Date(o.createdAt).toLocaleDateString(undefined, {
@@ -65,9 +67,10 @@ export default function OrdersPage() {
               <span
                 className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${STATUS_STYLES[o.status]}`}
               >
-                {o.status}
+                {o.status.replace("_", " ")}
               </span>
               <p className="text-lg font-bold">${o.totalPrice.toFixed(2)}</p>
+              </Link>
             </li>
           );
         })}
