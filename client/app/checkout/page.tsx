@@ -3,10 +3,11 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ShieldCheck, Truck, ArrowRight, MapPin } from "lucide-react";
+import { ShieldCheck, ArrowRight, MapPin, CreditCard, Banknote } from "lucide-react";
 import { useCartStore, cartTotal } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { createOrder, type ShippingAddress } from "@/lib/orderApi";
+import { createCheckoutSession } from "@/lib/paymentApi";
 
 const EMPTY_ADDRESS: ShippingAddress = {
   fullName: "",
@@ -17,6 +18,8 @@ const EMPTY_ADDRESS: ShippingAddress = {
   country: "",
 };
 
+type PaymentMethod = "COD" | "STRIPE";
+
 export default function CheckoutPage() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
@@ -25,6 +28,7 @@ export default function CheckoutPage() {
   const authLoading = useAuthStore((s) => s.loading);
 
   const [address, setAddress] = useState<ShippingAddress>(EMPTY_ADDRESS);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -44,12 +48,30 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError("");
     setSubmitting(true);
+
     try {
-      await createOrder(items, address);
+      // Step 1 — create order (COD or STRIPE)
+      const order = await createOrder(items, address, paymentMethod);
+
+      if (paymentMethod === "COD") {
+        // COD flow — unchanged from before
+        clear();
+        router.push("/orders");
+        return;
+      }
+
+      // STRIPE flow — clear cart first, then redirect
+      // Cart is cleared before redirect because:
+      // - Order is already persisted in DB
+      // - If payment cancelled, retry from order page not cart
       clear();
-      router.push("/orders");
-    } catch {
-      setError("Could not place your order. Please try again.");
+
+      const stripeUrl = await createCheckoutSession(order._id);
+      window.location.href = stripeUrl; // full page redirect to Stripe
+
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not place your order.";
+      setError(message);
       setSubmitting(false);
     }
   }
@@ -87,10 +109,10 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 xl:gap-16">
 
-          {/* ── Left: Shipping form (3 cols) ─────────────────────────── */}
+          {/* ── Left: form ───────────────────────────────────────────── */}
           <div className="lg:col-span-3">
 
-            {/* Section label */}
+            {/* Shipping address */}
             <div className="flex items-center gap-3 mb-6">
               <div className="w-7 h-7 rounded-full bg-[#2C1A0E] flex items-center justify-center shrink-0">
                 <MapPin size={13} className="text-[#F5EFE4]" />
@@ -100,7 +122,6 @@ export default function CheckoutPage() {
               </h2>
             </div>
 
-            {/* Error */}
             {error && (
               <div className="mb-6 bg-red-50 border border-red-200 px-4 py-3">
                 <p className="font-sans text-sm text-red-600">{error}</p>
@@ -108,15 +129,9 @@ export default function CheckoutPage() {
             )}
 
             <form onSubmit={onSubmit} className="space-y-5">
-              {/* Render fields — city + postal in a 2-col grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {fields.map((f) => (
-                  <div
-                    key={f.key}
-                    className={
-                      !f.half ? "sm:col-span-2" : "sm:col-span-1"
-                    }
-                  >
+                  <div key={f.key} className={!f.half ? "sm:col-span-2" : "sm:col-span-1"}>
                     <label className="block font-sans text-xs tracking-wide uppercase text-[#2C1A0E]/50 mb-2">
                       {f.label}
                     </label>
@@ -135,30 +150,84 @@ export default function CheckoutPage() {
               {/* Divider */}
               <div className="w-full h-px bg-[#2C1A0E]/10 my-2" />
 
-              {/* Payment method — COD only for now */}
+              {/* Payment method picker */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-7 h-7 rounded-full bg-[#2C1A0E] flex items-center justify-center shrink-0">
-                    <Truck size={13} className="text-[#F5EFE4]" />
+                    <CreditCard size={13} className="text-[#F5EFE4]" />
                   </div>
                   <h2 className="font-sans text-sm font-medium tracking-widest uppercase text-[#2C1A0E]">
                     Payment Method
                   </h2>
                 </div>
 
-                {/* COD option */}
-                <div className="border border-[#8B5E3C] bg-[#8B5E3C]/5 px-4 py-4 flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full border-2 border-[#8B5E3C] flex items-center justify-center shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-[#8B5E3C]" />
-                  </div>
-                  <div>
-                    <p className="font-sans text-sm font-medium text-[#2C1A0E]">
-                      Cash on Delivery
-                    </p>
-                    <p className="font-sans text-xs text-[#2C1A0E]/50 mt-0.5">
-                      Pay when your order arrives at your door
-                    </p>
-                  </div>
+                <div className="space-y-3">
+                  {/* COD option */}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("COD")}
+                    className={`w-full flex items-center gap-3 px-4 py-4 border transition-colors ${
+                      paymentMethod === "COD"
+                        ? "border-[#8B5E3C] bg-[#8B5E3C]/5"
+                        : "border-[#2C1A0E]/15 hover:border-[#2C1A0E]/30"
+                    }`}
+                  >
+                    {/* Radio indicator */}
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      paymentMethod === "COD" ? "border-[#8B5E3C]" : "border-[#2C1A0E]/30"
+                    }`}>
+                      {paymentMethod === "COD" && (
+                        <div className="w-2 h-2 rounded-full bg-[#8B5E3C]" />
+                      )}
+                    </div>
+                    <Banknote size={18} className="text-[#2C1A0E]/50 shrink-0" />
+                    <div className="text-left">
+                      <p className="font-sans text-sm font-medium text-[#2C1A0E]">
+                        Cash on Delivery
+                      </p>
+                      <p className="font-sans text-xs text-[#2C1A0E]/50 mt-0.5">
+                        Pay when your order arrives
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Stripe option */}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("STRIPE")}
+                    className={`w-full flex items-center gap-3 px-4 py-4 border transition-colors ${
+                      paymentMethod === "STRIPE"
+                        ? "border-[#8B5E3C] bg-[#8B5E3C]/5"
+                        : "border-[#2C1A0E]/15 hover:border-[#2C1A0E]/30"
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      paymentMethod === "STRIPE" ? "border-[#8B5E3C]" : "border-[#2C1A0E]/30"
+                    }`}>
+                      {paymentMethod === "STRIPE" && (
+                        <div className="w-2 h-2 rounded-full bg-[#8B5E3C]" />
+                      )}
+                    </div>
+                    <CreditCard size={18} className="text-[#2C1A0E]/50 shrink-0" />
+                    <div className="text-left flex-1">
+                      <p className="font-sans text-sm font-medium text-[#2C1A0E]">
+                        Pay by Card
+                      </p>
+                      <p className="font-sans text-xs text-[#2C1A0E]/50 mt-0.5">
+                        Visa, Mastercard, Apple Pay, Google Pay
+                      </p>
+                    </div>
+                    {/* Card logos */}
+                    <div className="flex items-center gap-1 ml-auto shrink-0">
+                      <div className="bg-[#2C1A0E]/5 px-2 py-1">
+                        <span className="font-sans text-[9px] tracking-widest text-[#2C1A0E]/50 font-medium">VISA</span>
+                      </div>
+                      <div className="bg-[#2C1A0E]/5 px-1.5 py-1 flex items-center">
+                        <div className="w-3.5 h-3.5 rounded-full bg-red-400/60" />
+                        <div className="w-3.5 h-3.5 rounded-full bg-yellow-400/60 -ml-1.5" />
+                      </div>
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -171,11 +240,11 @@ export default function CheckoutPage() {
                 {submitting ? (
                   <>
                     <span className="w-3 h-3 border border-[#F5EFE4]/40 border-t-[#F5EFE4] rounded-full animate-spin" />
-                    Placing order…
+                    {paymentMethod === "STRIPE" ? "Redirecting to Stripe…" : "Placing order…"}
                   </>
                 ) : (
                   <>
-                    Place Order
+                    {paymentMethod === "STRIPE" ? "Continue to Payment" : "Place Order"}
                     <ArrowRight size={14} />
                   </>
                 )}
@@ -185,45 +254,42 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-center gap-2 mt-2">
                 <ShieldCheck size={13} className="text-[#2C1A0E]/30" />
                 <p className="font-sans text-[10px] text-[#2C1A0E]/30 tracking-wide">
-                  Your information is encrypted and secure
+                  {paymentMethod === "STRIPE"
+                    ? "You'll be redirected to Stripe — charged in USD at the current exchange rate"
+                    : "Your information is encrypted and secure"}
                 </p>
               </div>
             </form>
           </div>
 
-          {/* ── Right: Order summary (2 cols) ────────────────────────── */}
+          {/* ── Right: order summary ──────────────────────────────────── */}
           <div className="lg:col-span-2">
             <div className="bg-[#E8DDD0] p-6 sticky top-24">
               <h2 className="font-serif text-xl text-[#2C1A0E] mb-6">
                 Order Summary
               </h2>
 
-              {/* Line items */}
               <ul className="space-y-4 mb-6">
                 {items.map((item) => (
                   <li key={item.product._id} className="flex items-center gap-3">
-                    {/* Image with qty badge */}
                     <div className="relative shrink-0">
-                      <div className="relative w-16 h-18 overflow-hidden bg-[#F5EFE4]">
+                      <div className="relative w-16 h-20 overflow-hidden bg-[#F5EFE4]">
                         {item.image ? (
                           <Image
                             src={item.image}
                             alt={item.name}
-                            width={64}
-                            height={72}
-                            className="object-cover w-full h-full"
+                            fill
+                            className="object-cover"
+                            sizes="64px"
                           />
                         ) : (
                           <div className="w-full h-full bg-[#E8DDD0]" />
                         )}
                       </div>
-                      {/* Qty badge */}
                       <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#2C1A0E] text-[#F5EFE4] font-sans text-[10px] flex items-center justify-center">
                         {item.qty}
                       </span>
                     </div>
-
-                    {/* Name + price */}
                     <div className="flex-1 min-w-0">
                       <p className="font-sans text-xs text-[#2C1A0E] leading-snug line-clamp-2">
                         {item.name}
@@ -232,8 +298,6 @@ export default function CheckoutPage() {
                         Rs. {item.price.toLocaleString()} × {item.qty}
                       </p>
                     </div>
-
-                    {/* Line total */}
                     <p className="font-sans text-sm font-medium text-[#2C1A0E] shrink-0">
                       Rs. {(item.price * item.qty).toLocaleString()}
                     </p>
@@ -241,10 +305,8 @@ export default function CheckoutPage() {
                 ))}
               </ul>
 
-              {/* Divider */}
               <div className="w-full h-px bg-[#2C1A0E]/10 mb-4" />
 
-              {/* Subtotal + shipping */}
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
                   <span className="font-sans text-xs text-[#2C1A0E]/50">Subtotal</span>
@@ -265,23 +327,29 @@ export default function CheckoutPage() {
                 <div className="flex justify-between">
                   <span className="font-sans text-xs text-[#2C1A0E]/50">Payment</span>
                   <span className="font-sans text-xs text-[#2C1A0E]">
-                    Cash on Delivery
+                    {paymentMethod === "STRIPE" ? "Card (Stripe)" : "Cash on Delivery"}
                   </span>
                 </div>
               </div>
 
-              {/* Divider */}
               <div className="w-full h-px bg-[#2C1A0E]/10 mb-4" />
 
-              {/* Total */}
               <div className="flex justify-between items-baseline">
-                <span className="font-sans text-sm font-medium text-[#2C1A0E]">
-                  Total
-                </span>
+                <span className="font-sans text-sm font-medium text-[#2C1A0E]">Total</span>
                 <span className="font-serif text-2xl text-[#2C1A0E]">
                   Rs. {subtotal.toLocaleString()}
                 </span>
               </div>
+
+              {/* Stripe badge when card selected */}
+              {paymentMethod === "STRIPE" && (
+                <div className="mt-4 pt-4 border-t border-[#2C1A0E]/10 flex items-center justify-center gap-2">
+                  <ShieldCheck size={12} className="text-[#2C1A0E]/30" />
+                  <p className="font-sans text-[10px] text-[#2C1A0E]/30">
+                    Powered by Stripe — PCI DSS compliant
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -11,10 +11,16 @@ export async function createOrder(req: Request, res: Response) {
     paymentMethod?: "COD" | "STRIPE";
   };
 
+  if (!["COD", "STRIPE"].includes(paymentMethod as string)) {
+    res.status(400);
+    throw new Error("Invalid payment method");
+  }
+
   if (!items?.length) {
     res.status(400);
     throw new Error("Cart is empty");
   }
+
 
   // Build line items from live product data.
   const lineItems = await Promise.all(
@@ -45,10 +51,11 @@ export async function createOrder(req: Request, res: Response) {
     user: req.user!.id,
     items: lineItems,
     shippingAddress,
-    paymentMethod: paymentMethod ?? "COD",
+    paymentMethod: paymentMethod,
     itemsPrice,
     shippingPrice: SHIPPING_FLAT,
     totalPrice,
+    status: paymentMethod === "STRIPE" ? "awaiting_payment" : "pending",
   });
 
   res.status(201).json(order);

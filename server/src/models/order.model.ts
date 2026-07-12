@@ -20,12 +20,17 @@ export interface IOrder extends Document {
     country: string;
   };
   paymentMethod: "COD" | "STRIPE";
+  paymentResult?: {
+    id: string;
+    status: string;
+    updateTime: string;
+  };
   itemsPrice: number;
   shippingPrice: number;
   totalPrice: number;
   isPaid: boolean;
   paidAt?: Date;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status: "awaiting_payment" | "pending" | "processing" | "shipped" | "delivered" | "cancelled";
 }
 
 const orderSchema = new Schema<IOrder>(
@@ -49,6 +54,14 @@ const orderSchema = new Schema<IOrder>(
       country: { type: String, required: true },
     },
     paymentMethod: { type: String, enum: ["COD", "STRIPE"], default: "COD" },
+    paymentResult: {
+      type: {
+        id: String,
+        status: String,
+        updateTime: String,
+      },
+      required: false,
+    },
     itemsPrice: { type: Number, required: true },
     shippingPrice: { type: Number, default: 0 },
     totalPrice: { type: Number, required: true },
@@ -56,7 +69,7 @@ const orderSchema = new Schema<IOrder>(
     paidAt: Date,
     status: {
       type: String,
-      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+      enum: ["awaiting_payment", "pending", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
   },
