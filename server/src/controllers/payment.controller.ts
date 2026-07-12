@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
-import { stripe, CURRENCY, toMinorUnits } from "../config/stripe";
+import { stripe, CURRENCY } from "../config/stripe";
+import { getPkrPerUsd, pkrToUsdCents } from "../utils/exchangeRate";
 import { Order } from "../models/order.model";
 import Stripe from "stripe";
+
+// Stripe rejects charges below ~$0.50 USD
+const STRIPE_MIN_USD_CENTS = 50;
 
 
 export async function createCheckoutSession(
@@ -40,11 +44,15 @@ export async function createCheckoutSession(
 
   const clientUrl = process.env.CLIENT_URL;
 
+  // Prices are stored/displayed in PKR, but Stripe doesn't support PKR —
+  // convert to USD at the current rate, only here at session creation.
+  const pkrPerUsd = await getPkrPerUsd();
+
   // Build line_items from snapshotted order items — never from client body
   const lineItems = order.items.map((item) => ({
     price_data: {
       currency: CURRENCY,
-      unit_amount: toMinorUnits(item.price),
+      unit_amount: pkrToUsdCents(item.price, pkrPerUsd),
       product_data: {
         name: item.name,
         ...(item.image ? { images: [item.image] } : {}),
@@ -53,12 +61,37 @@ export async function createCheckoutSession(
     quantity: item.qty,
   }));
 
+  if (order.shippingPrice > 0) {
+    lineItems.push({
+      price_data: {
+        currency: CURRENCY,
+        unit_amount: pkrToUsdCents(order.shippingPrice, pkrPerUsd),
+        product_data: { name: "Shipping" },
+      },
+      quantity: 1,
+    });
+  }
+
+  const usdTotalCents = lineItems.reduce(
+    (sum, li) => sum + li.price_data.unit_amount * li.quantity,
+    0
+  );
+
+  if (usdTotalCents < STRIPE_MIN_USD_CENTS) {
+    res.status(400);
+    throw new Error("Order total is below Stripe's minimum charge (~$0.50)");
+  }
+
   // Create the Stripe Checkout Session
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     line_items: lineItems,
     metadata: {
       orderId: order.id, // ← webhook uses this to find the order
+      // Conversion audit trail — visible in the Stripe dashboard
+      pkrTotal: String(order.totalPrice),
+      usdTotalCents: String(usdTotalCents),
+      pkrPerUsd: String(pkrPerUsd),
     },
     success_url: `${clientUrl}/orders/${order.id}?paid=1`,
     cancel_url: `${clientUrl}/checkout?cancelled=1`,

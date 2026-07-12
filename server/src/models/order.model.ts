@@ -30,7 +30,7 @@ export interface IOrder extends Document {
   totalPrice: number;
   isPaid: boolean;
   paidAt?: Date;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status: "awaiting_payment" | "pending" | "processing" | "shipped" | "delivered" | "cancelled";
 }
 
 const orderSchema = new Schema<IOrder>(
@@ -69,7 +69,7 @@ const orderSchema = new Schema<IOrder>(
     paidAt: Date,
     status: {
       type: String,
-      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+      enum: ["awaiting_payment", "pending", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
   },
