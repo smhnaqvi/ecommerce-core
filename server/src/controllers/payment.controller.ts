@@ -27,7 +27,9 @@ export async function createCheckoutSession(
     throw new Error("Order not found");
   }
 
-  if (order.user.toString() !== req.user!._id.toString()) {
+  // Guest orders have no owner and are COD-only, so nobody can pay for them
+  // through Stripe.
+  if (!order.user || order.user.toString() !== req.user!._id.toString()) {
     res.status(403);
     throw new Error("Not authorized to pay for this order");
   }

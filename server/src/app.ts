@@ -21,6 +21,11 @@ const dbConnection = connectDB();
 
 const app = express();
 
+// Behind Vercel's proxy, so `req.ip` reflects the client rather than the edge.
+app.set("trust proxy", 1);
+
+// Stripe needs the raw body to verify signatures, so this stays above
+// express.json().
 app.post(
   "/api/payments/webhook",
   express.raw({ type: "application/json" }),

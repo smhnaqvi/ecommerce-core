@@ -9,15 +9,20 @@ interface OrderItem {
 }
 
 export interface IOrder extends Document {
-  user: Types.ObjectId;
+  user?: Types.ObjectId;
+  isGuest: boolean;
+  // Which storefront the order came from: "web" for the main client,
+  // or a landing slug like "breezr-neck-fan".
+  source: string;
+  guestEmail?: string;
   items: OrderItem[];
   shippingAddress: {
     fullName: string;
     phone: string;
     address: string;
     city: string;
-    postalCode: string;
-    country: string;
+    postalCode?: string;
+    country?: string;
   };
   paymentMethod: "COD" | "STRIPE";
   paymentResult?: {
@@ -35,7 +40,18 @@ export interface IOrder extends Document {
 
 const orderSchema = new Schema<IOrder>(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    // Guest orders have no account behind them, so `user` is only required
+    // for orders placed by a signed-in customer.
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: function (this: IOrder) {
+        return !this.isGuest;
+      },
+    },
+    isGuest: { type: Boolean, default: false },
+    source: { type: String, default: "web", trim: true, index: true },
+    guestEmail: { type: String, trim: true, lowercase: true },
     items: [
       {
         product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
@@ -50,8 +66,9 @@ const orderSchema = new Schema<IOrder>(
       phone: { type: String, required: true },
       address: { type: String, required: true },
       city: { type: String, required: true },
-      postalCode: { type: String, required: true },
-      country: { type: String, required: true },
+      // Landing COD forms only collect name, phone, city and address.
+      postalCode: { type: String },
+      country: { type: String },
     },
     paymentMethod: { type: String, enum: ["COD", "STRIPE"], default: "COD" },
     paymentResult: {
