@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Types } from "mongoose";
 import { Product } from "../models/product.model";
 import { Category } from "../models/category.model";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary";
@@ -38,7 +39,12 @@ export async function listProducts(req: Request, res: Response) {
 }
 
 export async function getProductBySlug(req: Request, res: Response) {
-  const product = await Product.findOne({ slug: req.params.slug }).populate(
+  // The storefront looks products up by slug; the admin edit screen links by
+  // _id. Accept either so both work against the same route.
+  const key = String(req.params.slug);
+  const query = Types.ObjectId.isValid(key) ? { _id: key } : { slug: key };
+
+  const product = await Product.findOne(query).populate(
     "category",
     "name slug"
   );
