@@ -9,6 +9,7 @@ export interface IProduct extends Document {
   images: string[];
   countInStock: number;
   isActive: boolean;
+  isListed: boolean;
 }
 
 const productSchema = new Schema<IProduct>(
@@ -20,7 +21,12 @@ const productSchema = new Schema<IProduct>(
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     images: { type: [String], default: [] },
     countInStock: { type: Number, default: 0, min: 0 },
+    // `isActive` controls whether a product can be sold at all.
+    // `isListed` only controls whether the storefront shows it: an unlisted
+    // product is hidden from browse and search, but still sells fine when a
+    // landing page orders it by id.
     isActive: { type: Boolean, default: true },
+    isListed: { type: Boolean, default: true, index: true },
   },
   { timestamps: true }
 );
