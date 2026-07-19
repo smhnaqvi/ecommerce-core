@@ -39,10 +39,11 @@ export async function listProducts(req: Request, res: Response) {
 }
 
 export async function getProductBySlug(req: Request, res: Response) {
-  // The storefront looks products up by slug; the admin edit screen links by
-  // _id. Accept either so both work against the same route.
+  // The storefront looks products up by slug; landing pages and the admin
+  // edit screen link by _id. Accept either so both work against the route.
   const key = String(req.params.slug);
-  const query = Types.ObjectId.isValid(key) ? { _id: key } : { slug: key };
+  const byId = Types.ObjectId.isValid(key);
+  const query = byId ? { _id: key } : { slug: key };
 
   const product = await Product.findOne(query).populate(
     "category",
@@ -53,9 +54,10 @@ export async function getProductBySlug(req: Request, res: Response) {
     throw new Error("Product not found");
   }
 
-  // An unlisted product must not be browsable by slug either, or it isn't
-  // really hidden. Admins still need it for the edit screen.
-  if (product.isListed === false && !req.user?.isAdmin) {
+  // Unlisted products stay off the storefront, which browses by slug, so a
+  // slug lookup hides them. Fetching by _id stays open: landing pages need
+  // live price and images for a product that is deliberately unlisted.
+  if (product.isListed === false && !byId && !req.user?.isAdmin) {
     res.status(404);
     throw new Error("Product not found");
   }
