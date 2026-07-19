@@ -7,6 +7,8 @@ interface Product {
   name: string;
   price: number;
   countInStock: number;
+  isActive?: boolean;
+  isListed?: boolean;
 }
 
 export default function Products() {
@@ -34,7 +36,19 @@ export default function Products() {
         <tbody>
           {data?.items?.map((p) => (
             <tr key={p._id} className="border-b">
-              <td className="p-2">{p.name}</td>
+              <td className="p-2">
+                {p.name}
+                {p.isListed === false && (
+                  <span className="ml-2 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-700">
+                    Hidden
+                  </span>
+                )}
+                {p.isActive === false && (
+                  <span className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-700">
+                    Not for sale
+                  </span>
+                )}
+              </td>
               <td>${p.price}</td>
               <td>{p.countInStock}</td>
               <td className="space-x-2 text-right">

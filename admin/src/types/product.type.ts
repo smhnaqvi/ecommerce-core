@@ -9,6 +9,9 @@ export interface Product {
   images: string[];
   countInStock: number;
   category: Category;
+  isActive: boolean;
+  /** false = hidden from the storefront, but still orderable from landing pages */
+  isListed: boolean;
 }
 
 export interface ProductListResponse {

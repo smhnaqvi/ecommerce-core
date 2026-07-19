@@ -17,6 +17,8 @@ export default function ProductForm() {
   const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [isListed, setIsListed] = useState(true);
+  const [isActive, setIsActive] = useState(true);
   const [error, setError] = useState("");
 
   const { data: categories } = useQuery<{ _id: string; name: string }[]>({
@@ -37,6 +39,10 @@ export default function ProductForm() {
       setStock(String(existing.countInStock));
       setCategoryId(existing.category?._id ?? existing.category ?? "");
       setDescription(existing.description ?? "");
+      // Products created before these flags existed have them undefined,
+      // which should read as "visible" and "for sale".
+      setIsListed(existing.isListed !== false);
+      setIsActive(existing.isActive !== false);
     }
   }, [existing]);
 
@@ -64,6 +70,8 @@ export default function ProductForm() {
     form.append("countInStock", stock);
     form.append("category", categoryId);
     form.append("description", description);
+    form.append("isListed", String(isListed));
+    form.append("isActive", String(isActive));
     for (const file of files) form.append("images", file);
 
     save.mutate(form);
@@ -158,6 +166,41 @@ export default function ProductForm() {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="space-y-3 border-t border-gray-200 pt-4">
+          <p className="text-sm font-medium">Visibility</p>
+
+          <label className="flex gap-3 items-start cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isListed}
+              onChange={(e) => setIsListed(e.target.checked)}
+              className="mt-1"
+            />
+            <span className="text-sm">
+              Show on the storefront
+              <span className="block text-gray-500">
+                Uncheck for landing-page-only products. They stay hidden from
+                browse and search, but can still be ordered from a landing page.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex gap-3 items-start cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+              className="mt-1"
+            />
+            <span className="text-sm">
+              Available for sale
+              <span className="block text-gray-500">
+                Uncheck to stop all new orders, including from landing pages.
+              </span>
+            </span>
+          </label>
         </div>
 
         <button
