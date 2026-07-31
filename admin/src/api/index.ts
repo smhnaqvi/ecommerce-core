@@ -2,10 +2,14 @@ import auth from "./auth";
 import orders from "./orders";
 import products from "./products";
 import categories from "./categories"
+import siteSettings from "./siteSettings"
+import sliders from "./sliders"
 
 export default {
-    auth, 
+    auth,
     orders,
     products,
-    categories
+    categories,
+    siteSettings,
+    sliders
 }

@@ -1,6 +1,40 @@
 import Link from "next/link";
+import { SiteSettings } from "@/types";
 
-export default function Footer() {
+type FooterProps = {
+  settings?: SiteSettings["footer"];
+};
+
+export default function Footer({ settings }: FooterProps) {
+  const columns = settings?.columns?.length
+    ? settings.columns
+    : [
+        {
+          title: "Shop",
+          links: [
+            { label: "New Arrivals", href: "/collections?sort=newest" },
+            { label: "Best Sellers", href: "/collections?sort=best" },
+            { label: "Eastern Wear", href: "/collections?category=eastern" },
+            { label: "Western Wear", href: "/collections?category=western" },
+            { label: "Sale", href: "/collections?sale=true" },
+          ],
+        },
+        {
+          title: "Help",
+          links: [
+            { label: "Shipping Policies", href: "/policies/shipping" },
+            { label: "Terms & Conditions", href: "/policies/terms" },
+            { label: "Refund Policy", href: "/policies/refund" },
+            { label: "Privacy Policy", href: "/policies/privacy" },
+            { label: "Track Order", href: "/orders" },
+            { label: "Contact Us", href: "/contact" },
+          ],
+        },
+      ];
+
+  const copyrightText =
+    settings?.copyrightText || "© 2026 Buraq. All rights reserved.";
+
   return (
     <footer className="bg-[#2C1A0E] text-[#F5EFE4]">
 
@@ -80,56 +114,26 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Shop links */}
-          <div>
-            <p className="font-sans text-[10px] tracking-[0.3em] uppercase text-[#C9A882] mb-5">
-              Shop
-            </p>
-            <ul className="space-y-3">
-              {[
-                { label: "New Arrivals", href: "/collections?sort=newest" },
-                { label: "Best Sellers", href: "/collections?sort=best" },
-                { label: "Eastern Wear", href: "/collections?category=eastern" },
-                { label: "Western Wear", href: "/collections?category=western" },
-                { label: "Sale", href: "/collections?sale=true" },
-              ].map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="font-sans text-sm text-[#F5EFE4]/40 hover:text-[#F5EFE4] transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Help links */}
-          <div>
-            <p className="font-sans text-[10px] tracking-[0.3em] uppercase text-[#C9A882] mb-5">
-              Help
-            </p>
-            <ul className="space-y-3">
-              {[
-                { label: "Shipping Policies", href: "/policies/shipping" },
-                { label: "Terms & Conditions", href: "/policies/terms" },
-                { label: "Refund Policy", href: "/policies/refund" },
-                { label: "Privacy Policy", href: "/policies/privacy" },
-                { label: "Track Order", href: "/orders" },
-                { label: "Contact Us", href: "/contact" },
-              ].map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="font-sans text-sm text-[#F5EFE4]/40 hover:text-[#F5EFE4] transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Footer link columns — dynamic from Site Settings, falls back to defaults above */}
+          {columns.map((column) => (
+            <div key={column.title}>
+              <p className="font-sans text-[10px] tracking-[0.3em] uppercase text-[#C9A882] mb-5">
+                {column.title}
+              </p>
+              <ul className="space-y-3">
+                {column.links.map((item) => (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      className="font-sans text-sm text-[#F5EFE4]/40 hover:text-[#F5EFE4] transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
           {/* Newsletter */}
           <div>
@@ -188,7 +192,7 @@ export default function Footer() {
         {/* ── Bottom bar ───────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="font-sans text-[11px] text-[#F5EFE4]/25">
-            © 2026 Buraq. All rights reserved.
+            {copyrightText}
           </p>
           <div className="flex items-center gap-6">
             {[

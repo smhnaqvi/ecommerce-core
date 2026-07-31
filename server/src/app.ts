@@ -10,6 +10,8 @@ import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
 import orderRouter from "./routes/order.routes";
 import paymentRouter from "./routes/payment.routes";
+import siteSettingsRouter from "./routes/siteSettings.routes";
+import sliderRouter from "./routes/slider.routes";
 
 import { connectDB } from "./config/db";
 import { stripeWebhook } from "./controllers/payment.controller";
@@ -65,6 +67,8 @@ app.use("/api/categories", categoryRouter);
 app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/payments", paymentRouter);
+app.use("/api/site-settings", siteSettingsRouter);
+app.use("/api/sliders", sliderRouter);
 
 
 app.use(notFound);

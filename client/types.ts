@@ -23,3 +23,42 @@ export interface ProductListResponse {
   pages: number;
   total: number;
 }
+
+export interface Slide {
+  _id: string;
+  imageUrl: string;
+  title?: string;
+  subtitle?: string;
+  link?: string;
+  order: number;
+  isActive: boolean;
+}
+
+export interface FooterLink {
+  label: string;
+  href: string;
+}
+
+export interface FooterColumn {
+  title: string;
+  links: FooterLink[];
+}
+
+export interface SocialLink {
+  platform: string;
+  href: string;
+}
+
+export interface SiteSettings {
+  logoUrl: string;
+  footer: {
+    columns: FooterColumn[];
+    socialLinks: SocialLink[];
+    copyrightText: string;
+  };
+  theme: {
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+  };
+}

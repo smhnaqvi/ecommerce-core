@@ -9,6 +9,8 @@ const Products = lazy(() => import("./pages/Products"));
 const ProductForm = lazy(() => import("./pages/ProductForm"));
 const Categories = lazy(() => import("./pages/Categories"));
 const Orders = lazy(() => import("./pages/Orders"));
+const SiteSettings = lazy(() => import("./pages/SiteSettings"));
+const Sliders = lazy(() => import("./pages/Sliders"));
 
 const e = createElement;
 
@@ -29,6 +31,8 @@ export const router = createBrowserRouter([
               { path: "products/:id/edit", element: e(ProductForm) },
               { path: "categories", element: e(Categories) },
               { path: "orders", element: e(Orders) },
+              { path: "site-settings", element: e(SiteSettings) },
+              { path: "sliders", element: e(Sliders) },
             ],
           },
         ],

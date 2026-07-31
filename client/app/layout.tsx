@@ -4,6 +4,7 @@ import { Playfair_Display, DM_Sans } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthInitializer from "@/components/AuthInitializer";
+import { getSiteSettings } from "@/lib/api";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -30,11 +31,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const siteSettings = await getSiteSettings();
+  const theme = siteSettings?.theme;
+
   return (
     <html
       lang="en"
@@ -49,11 +53,20 @@ export default function RootLayout({
           }}
         />
 
+        {/* Dynamic theme colors — overrides globals.css :root vars when set in Site Settings */}
+        {theme && (theme.primaryColor || theme.secondaryColor || theme.accentColor) && (
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `:root{${theme.primaryColor ? `--primary:${theme.primaryColor};` : ""}${theme.secondaryColor ? `--muted-foreground:${theme.secondaryColor};` : ""}${theme.accentColor ? `--color-brand-gold:${theme.accentColor};` : ""}}`,
+            }}
+          />
+        )}
+
         {/* Auth state initializer (client component) */}
         <AuthInitializer />
 
         {/* Nav — fixed, sits above everything */}
-        <Navbar />
+        <Navbar logoUrl={siteSettings?.logoUrl} />
 
         {/* Page content — no max-width or padding here,
             each section/page controls its own layout */}
@@ -62,7 +75,7 @@ export default function RootLayout({
         </div>
 
         {/* Footer — on every page */}
-        <Footer />
+        <Footer settings={siteSettings?.footer} />
       </body>
     </html>
   );
