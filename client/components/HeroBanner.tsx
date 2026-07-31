@@ -1,13 +1,45 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { Slide } from "@/types";
 
-export default function HeroBanner() {
+const DEFAULT_SLIDE: Slide = {
+  _id: "default",
+  imageUrl: "https://buraqofficial.com/cdn/shop/files/buraq_1.jpg?v=1778660391&width=3000",
+  title: "Wear the Art of the East",
+  subtitle:
+    "Handcrafted menswear where tradition meets contemporary silhouette. Every thread tells a story.",
+  link: "/collections",
+  order: 0,
+  isActive: true,
+};
+
+export default function HeroBanner({ slides }: { slides?: Slide[] }) {
+  const activeSlides = slides?.length
+    ? [...slides].sort((a, b) => a.order - b.order)
+    : [DEFAULT_SLIDE];
+
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (activeSlides.length <= 1) return;
+    const timer = setInterval(
+      () => setIndex((i) => (i + 1) % activeSlides.length),
+      6000
+    );
+    return () => clearInterval(timer);
+  }, [activeSlides.length]);
+
+  const slide = activeSlides[index];
+
   return (
     <section className="relative w-full h-screen min-h-[600px] overflow-hidden">
       {/* Full bleed background image */}
       <Image
-        src="https://buraqofficial.com/cdn/shop/files/buraq_1.jpg?v=1778660391&width=3000"
-        alt="Buraq Collection 2026"
+        src={slide.imageUrl}
+        alt={slide.title || "Buraq Collection"}
         fill
         className="object-cover object-top"
         priority
@@ -30,20 +62,20 @@ export default function HeroBanner() {
 
           {/* Headline */}
           <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-semibold text-[#F5EFE4] leading-[1.05] mb-6">
-            Wear the<br />
-            <em className="not-italic text-[#C9A882]">Art</em> of<br />
-            the East
+            {slide.title || "Wear the Art of the East"}
           </h1>
 
           {/* Subtext */}
-          <p className="font-sans text-base sm:text-lg text-[#F5EFE4]/60 leading-relaxed max-w-sm mb-10">
-            Handcrafted menswear where tradition meets contemporary silhouette. Every thread tells a story.
-          </p>
+          {slide.subtitle && (
+            <p className="font-sans text-base sm:text-lg text-[#F5EFE4]/60 leading-relaxed max-w-sm mb-10">
+              {slide.subtitle}
+            </p>
+          )}
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
-              href="/collections"
+              href={slide.link || "/collections"}
               className="inline-flex items-center justify-center bg-[#C9A882] text-[#2C1A0E] font-sans text-xs tracking-widest uppercase px-8 py-4 hover:bg-[#F5EFE4] transition-colors duration-300"
             >
               Shop Collection
@@ -58,13 +90,21 @@ export default function HeroBanner() {
         </div>
       </div>
 
-      {/* Bottom scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-        <span className="font-sans text-[10px] tracking-widest uppercase text-[#F5EFE4]/40">
-          Scroll
-        </span>
-        <div className="w-px h-10 bg-gradient-to-b from-[#F5EFE4]/40 to-transparent animate-pulse" />
-      </div>
+      {/* Slide indicators */}
+      {activeSlides.length > 1 && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+          {activeSlides.map((_, i) => (
+            <button
+              key={i}
+              aria-label={`Go to slide ${i + 1}`}
+              onClick={() => setIndex(i)}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                i === index ? "bg-[#C9A882]" : "bg-[#F5EFE4]/30"
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Bottom-right: floating stat */}
       <div className="absolute bottom-8 right-8 sm:right-12 lg:right-20 text-right hidden sm:block">

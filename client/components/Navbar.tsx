@@ -23,7 +23,7 @@ const NavLinks = [
   },
 ];
 
-export default function Navbar() {
+export default function Navbar({ logoUrl }: { logoUrl?: string }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -31,7 +31,12 @@ export default function Navbar() {
       <div className="max-w-[1440px] mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="font-serif text-2xl font-semibold tracking-wide text-espresso">
-          BURAQ
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
+          ) : (
+            "BURAQ"
+          )}
         </Link>
 
         {/* Nav links */}

@@ -6,6 +6,8 @@ const navItems = [
   { to: "/", label: "Products" },
   { to: "/categories", label: "Categories" },
   { to: "/orders", label: "Orders" },
+  { to: "/sliders", label: "Slider" },
+  { to: "/site-settings", label: "Site Settings" },
 ];
 
 export default function AdminLayout() {
