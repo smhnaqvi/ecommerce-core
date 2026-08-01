@@ -15,11 +15,28 @@ export interface ISocialLink {
   href: string;
 }
 
+export interface IContactInfo {
+  timings: string;
+  contact: string;
+  email: string;
+  address: string;
+}
+
 export interface ISiteSettings extends Document {
   logoUrl: string;
   footer: {
+    brandName: string;
+    brandDescription: string;
+    contactInfo: IContactInfo;
     columns: IFooterColumn[];
     socialLinks: ISocialLink[];
+    newsletterTitle: string;
+    newsletterDescription: string;
+    paymentMethods: {
+      visa: boolean;
+      mastercard: boolean;
+      cod: boolean;
+    };
     copyrightText: string;
   };
   theme: {
@@ -53,12 +70,32 @@ const socialLinkSchema = new Schema<ISocialLink>(
   { _id: false }
 );
 
+const contactInfoSchema = new Schema<IContactInfo>(
+  {
+    timings: { type: String, default: "" },
+    contact: { type: String, default: "" },
+    email: { type: String, default: "" },
+    address: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
 const siteSettingsSchema = new Schema<ISiteSettings>(
   {
     logoUrl: { type: String, default: "" },
     footer: {
+      brandName: { type: String, default: "" },
+      brandDescription: { type: String, default: "" },
+      contactInfo: { type: contactInfoSchema, default: () => ({}) },
       columns: { type: [footerColumnSchema], default: [] },
       socialLinks: { type: [socialLinkSchema], default: [] },
+      newsletterTitle: { type: String, default: "" },
+      newsletterDescription: { type: String, default: "" },
+      paymentMethods: {
+        visa: { type: Boolean, default: false },
+        mastercard: { type: Boolean, default: false },
+        cod: { type: Boolean, default: false },
+      },
       copyrightText: { type: String, default: "" },
     },
     theme: {

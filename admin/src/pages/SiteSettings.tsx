@@ -7,6 +7,8 @@ type ApiError = { response?: { data?: { message?: string } } };
 type FooterLink = { label: string; href: string };
 type FooterColumn = { title: string; links: FooterLink[] };
 type SocialLink = { platform: string; href: string };
+type ContactInfo = { timings: string; contact: string; email: string; address: string };
+type PaymentMethods = { visa: boolean; mastercard: boolean; cod: boolean };
 
 export default function SiteSettings() {
   const qc = useQueryClient();
@@ -19,8 +21,26 @@ export default function SiteSettings() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
 
+  const [brandName, setBrandName] = useState("");
+  const [brandDescription, setBrandDescription] = useState("");
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    timings: "",
+    contact: "",
+    email: "",
+    address: "",
+  });
+
   const [columns, setColumns] = useState<FooterColumn[]>([]);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+
+  const [newsletterTitle, setNewsletterTitle] = useState("");
+  const [newsletterDescription, setNewsletterDescription] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>({
+    visa: false,
+    mastercard: false,
+    cod: false,
+  });
+
   const [copyrightText, setCopyrightText] = useState("");
 
   const [primaryColor, setPrimaryColor] = useState("#000000");
@@ -32,8 +52,23 @@ export default function SiteSettings() {
   useEffect(() => {
     if (existing) {
       setLogoUrl(existing.logoUrl ?? "");
+      setBrandName(existing.footer?.brandName ?? "");
+      setBrandDescription(existing.footer?.brandDescription ?? "");
+      setContactInfo({
+        timings: existing.footer?.contactInfo?.timings ?? "",
+        contact: existing.footer?.contactInfo?.contact ?? "",
+        email: existing.footer?.contactInfo?.email ?? "",
+        address: existing.footer?.contactInfo?.address ?? "",
+      });
       setColumns(existing.footer?.columns ?? []);
       setSocialLinks(existing.footer?.socialLinks ?? []);
+      setNewsletterTitle(existing.footer?.newsletterTitle ?? "");
+      setNewsletterDescription(existing.footer?.newsletterDescription ?? "");
+      setPaymentMethods({
+        visa: existing.footer?.paymentMethods?.visa ?? false,
+        mastercard: existing.footer?.paymentMethods?.mastercard ?? false,
+        cod: existing.footer?.paymentMethods?.cod ?? false,
+      });
       setCopyrightText(existing.footer?.copyrightText ?? "");
       setPrimaryColor(existing.theme?.primaryColor || "#000000");
       setSecondaryColor(existing.theme?.secondaryColor || "#000000");
@@ -124,7 +159,17 @@ export default function SiteSettings() {
 
     form.append(
       "footer",
-      JSON.stringify({ columns, socialLinks, copyrightText })
+      JSON.stringify({
+        brandName,
+        brandDescription,
+        contactInfo,
+        columns,
+        socialLinks,
+        newsletterTitle,
+        newsletterDescription,
+        paymentMethods,
+        copyrightText,
+      })
     );
     form.append(
       "theme",
@@ -156,6 +201,63 @@ export default function SiteSettings() {
           {logoUrl && (
             <img src={logoUrl} className="w-24 h-24 object-contain mt-2" />
           )}
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold mb-3">Brand</h2>
+          <div className="space-y-2">
+            <input
+              placeholder="Brand name"
+              value={brandName}
+              onChange={(e) => setBrandName(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <textarea
+              placeholder="Brand description"
+              value={brandDescription}
+              onChange={(e) => setBrandDescription(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              rows={2}
+            />
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold mb-3">Contact Info</h2>
+          <div className="space-y-2">
+            <input
+              placeholder="Timings (e.g. Mon – Sat, 10:00 AM to 6:00 PM)"
+              value={contactInfo.timings}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, timings: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <input
+              placeholder="Contact number"
+              value={contactInfo.contact}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, contact: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <input
+              placeholder="Email"
+              value={contactInfo.email}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, email: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <input
+              placeholder="Address"
+              value={contactInfo.address}
+              onChange={(e) =>
+                setContactInfo({ ...contactInfo, address: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
         </section>
 
         <section>
@@ -263,6 +365,61 @@ export default function SiteSettings() {
                 </button>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold mb-3">Newsletter</h2>
+          <div className="space-y-2">
+            <input
+              placeholder="Title (e.g. Stay in the loop)"
+              value={newsletterTitle}
+              onChange={(e) => setNewsletterTitle(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <textarea
+              placeholder="Description"
+              value={newsletterDescription}
+              onChange={(e) => setNewsletterDescription(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              rows={2}
+            />
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold mb-3">Payment Methods</h2>
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={paymentMethods.visa}
+                onChange={(e) =>
+                  setPaymentMethods({ ...paymentMethods, visa: e.target.checked })
+                }
+              />
+              Visa
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={paymentMethods.mastercard}
+                onChange={(e) =>
+                  setPaymentMethods({ ...paymentMethods, mastercard: e.target.checked })
+                }
+              />
+              Mastercard
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={paymentMethods.cod}
+                onChange={(e) =>
+                  setPaymentMethods({ ...paymentMethods, cod: e.target.checked })
+                }
+              />
+              Cash on Delivery
+            </label>
           </div>
         </section>
 

@@ -5,21 +5,10 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Slide } from "@/types";
 
-const DEFAULT_SLIDE: Slide = {
-  _id: "default",
-  imageUrl: "https://buraqofficial.com/cdn/shop/files/buraq_1.jpg?v=1778660391&width=3000",
-  title: "Wear the Art of the East",
-  subtitle:
-    "Handcrafted menswear where tradition meets contemporary silhouette. Every thread tells a story.",
-  link: "/collections",
-  order: 0,
-  isActive: true,
-};
-
 export default function HeroBanner({ slides }: { slides?: Slide[] }) {
   const activeSlides = slides?.length
     ? [...slides].sort((a, b) => a.order - b.order)
-    : [DEFAULT_SLIDE];
+    : [];
 
   const [index, setIndex] = useState(0);
 
@@ -31,6 +20,8 @@ export default function HeroBanner({ slides }: { slides?: Slide[] }) {
     );
     return () => clearInterval(timer);
   }, [activeSlides.length]);
+
+  if (activeSlides.length === 0) return null;
 
   const slide = activeSlides[index];
 
@@ -52,18 +43,12 @@ export default function HeroBanner({ slides }: { slides?: Slide[] }) {
       <div className="absolute inset-0 flex items-center">
         <div className="px-8 sm:px-12 lg:px-20 xl:px-28 max-w-3xl">
 
-          {/* Eyebrow */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-px bg-[#C9A882]" />
-            <span className="font-sans text-[11px] tracking-[0.35em] uppercase text-[#C9A882]">
-              New Collection — 2026
-            </span>
-          </div>
-
           {/* Headline */}
-          <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-semibold text-[#F5EFE4] leading-[1.05] mb-6">
-            {slide.title || "Wear the Art of the East"}
-          </h1>
+          {slide.title && (
+            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-semibold text-[#F5EFE4] leading-[1.05] mb-6">
+              {slide.title}
+            </h1>
+          )}
 
           {/* Subtext */}
           {slide.subtitle && (
@@ -72,21 +57,17 @@ export default function HeroBanner({ slides }: { slides?: Slide[] }) {
             </p>
           )}
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href={slide.link || "/collections"}
-              className="inline-flex items-center justify-center bg-[#C9A882] text-[#2C1A0E] font-sans text-xs tracking-widest uppercase px-8 py-4 hover:bg-[#F5EFE4] transition-colors duration-300"
-            >
-              Shop Collection
-            </Link>
-            <Link
-              href="/about"
-              className="inline-flex items-center justify-center border border-[#F5EFE4]/40 text-[#F5EFE4] font-sans text-xs tracking-widest uppercase px-8 py-4 hover:border-[#C9A882] hover:text-[#C9A882] transition-colors duration-300"
-            >
-              Our Story
-            </Link>
-          </div>
+          {/* CTA */}
+          {slide.link && (
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                href={slide.link}
+                className="inline-flex items-center justify-center bg-[#C9A882] text-[#2C1A0E] font-sans text-xs tracking-widest uppercase px-8 py-4 hover:bg-[#F5EFE4] transition-colors duration-300"
+              >
+                Shop Collection
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -105,14 +86,6 @@ export default function HeroBanner({ slides }: { slides?: Slide[] }) {
           ))}
         </div>
       )}
-
-      {/* Bottom-right: floating stat */}
-      <div className="absolute bottom-8 right-8 sm:right-12 lg:right-20 text-right hidden sm:block">
-        <p className="font-serif text-3xl text-[#F5EFE4]">200+</p>
-        <p className="font-sans text-[10px] tracking-widest uppercase text-[#F5EFE4]/40 mt-1">
-          Styles available
-        </p>
-      </div>
     </section>
   );
 }
