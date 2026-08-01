@@ -49,11 +49,28 @@ export interface SocialLink {
   href: string;
 }
 
+export interface ContactInfo {
+  timings: string;
+  contact: string;
+  email: string;
+  address: string;
+}
+
 export interface SiteSettings {
   logoUrl: string;
   footer: {
+    brandName: string;
+    brandDescription: string;
+    contactInfo: ContactInfo;
     columns: FooterColumn[];
     socialLinks: SocialLink[];
+    newsletterTitle: string;
+    newsletterDescription: string;
+    paymentMethods: {
+      visa: boolean;
+      mastercard: boolean;
+      cod: boolean;
+    };
     copyrightText: string;
   };
   theme: {
